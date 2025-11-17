@@ -1,3 +1,5 @@
+# test_additional_get_order_track.py
+
 import requests
 import allure
 from config import BASE_URL
@@ -11,7 +13,7 @@ class TestGetOrdersTrack:
     def test_get_order_by_track_success(self):
         
         with allure.step("Создание заказа"):
-            original_order_data = TestData.get_order_data()
+            original_order_data = TestData.get_order_data([''])
             order_response = requests.post(f'{BASE_URL}/orders', json=original_order_data)
             assert order_response.status_code == 201
             order_track = order_response.json()['track']
@@ -19,7 +21,7 @@ class TestGetOrdersTrack:
         with allure.step("Отправка запроса на получение заказа по номеру"):
             response = requests.get(f'{BASE_URL}/orders/track', params={'t': order_track})
         
-        with allure.step("Проверка кода и текста ответа"):
+        with allure.step("Проверка ответа"):
             assert response.status_code == 200
             data = response.json()
             assert 'order' in data
@@ -37,7 +39,7 @@ class TestGetOrdersTrack:
             assert received_order['color'] == original_order_data['color']
             assert received_order['track'] == order_track
         
-        with allure.step("Отмена созданного заказа с проверкой"):
+        with allure.step("Отмена созданного заказа"):
             cancel_response = requests.put(f'{BASE_URL}/orders/cancel', params={'track': order_track})
             assert cancel_response.status_code == 200
             
@@ -47,8 +49,9 @@ class TestGetOrdersTrack:
         with allure.step("Отправка запроса на получение заказа без номера трека"):
             response = requests.get(f'{BASE_URL}/orders/track')
         
-        with allure.step("Проверка кода ошибки"):
+        with allure.step("Проверка ответа"):
             assert response.status_code == 400
+            assert response.json() == {"message": "Недостаточно данных для поиска"}
             
     @allure.title("Проверка ошибки при получении заказа с несуществующим номером трека")
     def test_get_order_with_nonexistent_track_fails(self):
@@ -56,6 +59,6 @@ class TestGetOrdersTrack:
         with allure.step("Отправка запроса на получение заказа с несуществующим номером трека"):
             response = requests.get(f'{BASE_URL}/orders/track', params={'t': 999999})
         
-        with allure.step("Проверка кода ошибки"):
+        with allure.step("Проверка ответа"):
             assert response.status_code == 404
-            
+            assert response.json() == {"message": "Заказ не найден"}

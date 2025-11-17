@@ -1,3 +1,5 @@
+# test_order_creation.py
+
 import pytest
 import requests
 import allure
@@ -12,7 +14,7 @@ class TestOrderCreation:
         (["BLACK"], "Создание заказа с черным цветом"),
         (["GREY"], "Создание заказа с серым цветом"),
         (["BLACK", "GREY"], "Создание заказа с обоими цветами"),
-        ([], "Создание заказа без указания цвета")
+        ([''], "Создание заказа без указания цвета")
     ])
     def test_create_order_with_different_colors(self, color, test_description):
        
@@ -24,9 +26,8 @@ class TestOrderCreation:
         with allure.step("Проверка успешного создания заказа"):
             assert response.status_code == 201
             response_data = response.json()
-            assert 'track' in response.json()
+            assert 'track' in response_data
             
         with allure.step("Отмена созданного заказа"):
             cancel_response = requests.put(f'{BASE_URL}/orders/cancel', params={'track': response_data['track']})
-           
-            
+            assert cancel_response.status_code == 200
